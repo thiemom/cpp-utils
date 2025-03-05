@@ -59,6 +59,7 @@ if(BUILD_GP_PREDICT)
     add_library(gp-predict
         gp-predict.cpp
         gp-predict.h
+        kernels.cpp
         kernels.h
     )
     target_include_directories(gp-predict PUBLIC

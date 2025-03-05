@@ -3,6 +3,8 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <mutex>
+#include <stdexcept>
 
 Eigen::VectorXd PolynomialRegression::parseVector(const std::string& line) const {
     std::vector<double> values;
@@ -25,7 +27,7 @@ Eigen::MatrixXi PolynomialRegression::parseMatrix(std::ifstream& file, int rows,
         while (std::getline(ss, item, ',')) {
             values.push_back(std::stoi(item));
         }
-        if (values.size() != cols) throw std::runtime_error("Column size mismatch.");
+        if (static_cast<int>(values.size()) != cols) throw std::runtime_error("Column size mismatch.");
         for (int j = 0; j < cols; ++j) matrix(i, j) = values[j];
     }
     return matrix;

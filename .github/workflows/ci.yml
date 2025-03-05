@@ -1,0 +1,98 @@
+name: C++ CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - {
+              name: "Ubuntu Latest GCC",
+              os: ubuntu-latest,
+              build_type: "Release",
+              cc: "gcc",
+              cxx: "g++",
+              generators: "Unix Makefiles"
+            }
+          - {
+              name: "macOS Latest Clang",
+              os: macos-latest,
+              build_type: "Release",
+              cc: "clang",
+              cxx: "clang++",
+              generators: "Unix Makefiles"
+            }
+          - {
+              name: "Windows Latest MSVC",
+              os: windows-latest,
+              build_type: "Release",
+              cc: "cl",
+              cxx: "cl",
+              generators: "Visual Studio 17 2022"
+            }
+          - {
+              name: "Windows MinGW",
+              os: windows-latest,
+              build_type: "Release",
+              cc: "gcc",
+              cxx: "g++",
+              generators: "MinGW Makefiles"
+            }
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install dependencies (Ubuntu)
+      if: matrix.config.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libeigen3-dev
+
+    - name: Install dependencies (macOS)
+      if: matrix.config.os == 'macos-latest'
+      run: |
+        brew install eigen
+
+    - name: Install dependencies (Windows)
+      if: matrix.config.os == 'windows-latest'
+      run: |
+        # Install vcpkg if not using MSVC
+        if ("${{ matrix.config.cc }}" -ne "cl") {
+          git clone https://github.com/Microsoft/vcpkg.git
+          cd vcpkg
+          ./bootstrap-vcpkg.bat
+          ./vcpkg install eigen3:x64-windows
+          echo "VCPKG_ROOT=$env:GITHUB_WORKSPACE/vcpkg" | Out-File -FilePath $env:GITHUB_ENV -Append
+        } else {
+          # For MSVC, use vcpkg integration with CMake
+          git clone https://github.com/Microsoft/vcpkg.git
+          cd vcpkg
+          ./bootstrap-vcpkg.bat
+          ./vcpkg install eigen3:x64-windows
+          ./vcpkg integrate install
+          echo "CMAKE_TOOLCHAIN_FILE=$env:GITHUB_WORKSPACE/vcpkg/scripts/buildsystems/vcpkg.cmake" | Out-File -FilePath $env:GITHUB_ENV -Append
+        }
+
+    - name: Configure CMake
+      run: |
+        mkdir build
+        cd build
+        cmake .. -DCMAKE_BUILD_TYPE=${{ matrix.config.build_type }} -G "${{ matrix.config.generators }}" ${{ matrix.config.cc == 'cl' && '-DCMAKE_TOOLCHAIN_FILE=$env:CMAKE_TOOLCHAIN_FILE' || '' }}
+
+    - name: Build
+      run: |
+        cd build
+        cmake --build . --config ${{ matrix.config.build_type }}
+
+    - name: Test
+      run: |
+        cd build
+        ctest -C ${{ matrix.config.build_type }} --output-on-failure

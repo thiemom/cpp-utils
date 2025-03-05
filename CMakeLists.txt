@@ -11,6 +11,7 @@ option(BUILD_POLYREGRESSION "Build polynomial regression component" ON)
 option(BUILD_GP_PREDICT "Build Gaussian process prediction component" ON)
 option(BUILD_CONFIG "Build configuration utility component" ON)
 option(BUILD_EXAMPLES "Build example programs" ON)
+option(BUILD_TESTS "Build test suite" OFF)
 
 # Find Eigen (required for all components)
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
@@ -62,6 +63,11 @@ endif()
 # Examples
 if(BUILD_EXAMPLES)
     add_subdirectory(examples)
+endif()
+
+# Tests
+if(BUILD_TESTS)
+    add_subdirectory(tests)
 endif()
 
 # Installation rules

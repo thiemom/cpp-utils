@@ -77,7 +77,6 @@ bool GaussianProcess::loadModel(const std::string &meanFile, const std::string &
     if (!loadKernel(meanFile + ".kernel")) {
         return false;
     }
-    std::lock_guard<std::mutex> lock(mtx);
 
     std::ifstream meanStream(meanFile);
     std::ifstream covStream(covFile);

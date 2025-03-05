@@ -34,13 +34,20 @@ endif()
 # Add components based on options
 if(BUILD_CONFIG)
     add_library(config INTERFACE)
-    target_include_directories(config INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+    target_include_directories(config INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    )
 endif()
 
 if(BUILD_POLYREGRESSION)
     add_library(polyregression
         polyregression.cpp
         polyregression.h
+    )
+    target_include_directories(polyregression PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     )
     target_link_libraries(polyregression PUBLIC Eigen3::Eigen)
     if(BUILD_CONFIG)
@@ -53,6 +60,10 @@ if(BUILD_GP_PREDICT)
         gp-predict.cpp
         gp-predict.h
         kernels.h
+    )
+    target_include_directories(gp-predict PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     )
     target_link_libraries(gp-predict PUBLIC Eigen3::Eigen)
     if(BUILD_CONFIG)

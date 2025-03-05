@@ -1,20 +1,47 @@
-# C++ Utilities
+# C++ Machine Learning Tools
 
-A collection of modern C++ utilities focused on performance and thread safety.
+A collection of modern C++ utilities for machine learning, focused on performance and thread safety.
 
-## Available Utilities
+## Available Components
 
 ### 1. ConfigLoader
 A thread-safe configuration loader with type validation and error handling.
 
-### 2. PolynomialRegression
+### 2. Polynomial Regression
 A thread-safe polynomial regression implementation compatible with scikit-learn models.
+
+### 3. Gaussian Processes
+A flexible Gaussian Process implementation supporting various kernels and scikit-learn compatibility.
 
 ---
 
-# ConfigLoader
+# Components
 
-A modern C++ configuration loader with type safety and validation support. This library provides a flexible and easy-to-use interface for loading and managing configuration values from text files.
+## 1. ConfigLoader
+
+A modern C++ configuration loader with type safety and validation support. This header-only library provides a flexible and easy-to-use interface for loading and managing configuration values from text files.
+
+### API Reference
+
+```cpp
+class ConfigLoader {
+    // Load configuration from file
+    bool load(const std::string& filename);
+    
+    // Get value with type checking
+    template<typename T>
+    T get(const std::string& key) const;
+    
+    // Get value with default
+    template<typename T>
+    T getOr(const std::string& key, const T& defaultValue) const;
+    
+    // Add validation rules
+    template<typename T>
+    void addRangeRule(const std::string& key, T min, T max);
+    void addPatternRule(const std::string& key, const std::string& pattern);
+};
+```
 
 ## Features
 
@@ -33,7 +60,73 @@ A modern C++ configuration loader with type safety and validation support. This 
 
 ---
 
-# GP-Predict
+## 2. Polynomial Regression
+
+A C++ implementation of polynomial regression that can load and use models trained with scikit-learn. Designed for high-performance prediction with thread safety.
+
+### Key Features
+
+- **Scikit-learn Compatibility**: Load models trained with scikit-learn's PolynomialFeatures
+- **Thread Safety**: Support for concurrent predictions and model updates
+- **High Performance**: Efficient matrix operations using Eigen
+- **Batch Processing**: Support for both single and batch predictions
+- **Error Handling**: Comprehensive error checking and reporting
+
+### API Reference
+
+```cpp
+class PolynomialRegression {
+    // Load a trained model from file
+    bool loadModel(const std::string& filename);
+    
+    // Make single prediction
+    double predict(const Eigen::VectorXd& x) const;
+    
+    // Make batch predictions
+    Eigen::VectorXd predictBatch(const Eigen::MatrixXd& X) const;
+    
+    // Get number of features
+    size_t numFeatures() const;
+};
+```
+
+### Usage Example
+
+1. **Train Model in Python**:
+```python
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LinearRegression
+
+# Generate sample data
+X = np.array([[1.0], [2.0], [3.0]])
+y = np.array([2.0, 4.0, 6.0])
+
+# Create and train model
+poly = PolynomialFeatures(degree=2)
+X_poly = poly.fit_transform(X)
+model = LinearRegression().fit(X_poly, y)
+
+# Export model
+python sklearn_export.py --model polynomial --degree 2
+```
+
+2. **Use in C++**:
+```cpp
+#include "polyregression.h"
+
+int main() {
+    PolynomialRegression model;
+    model.loadModel("model.txt");
+    
+    Eigen::VectorXd x(1);
+    x << 2.5;
+    double y = model.predict(x);
+    std::cout << "f(2.5) = " << y << std::endl;
+    return 0;
+}
+```
+
+## 3. Gaussian Processes
 
 A C++ implementation of Gaussian Process regression that supports various kernels and is compatible with scikit-learn models. Features thread-safe prediction and composite kernel support.
 
@@ -126,6 +219,39 @@ void predictConcurrently(const GaussianProcess& gp) {
 }
 ```
 
+### API Reference
+
+```cpp
+class GaussianProcess {
+    // Load a trained model from file
+    bool loadModel(const std::string& meanFile,
+                  const std::string& covFile);
+    
+    // Make prediction
+    double predict(const Eigen::VectorXd& x) const;
+    
+    // Get training data size
+    size_t numTrainingPoints() const;
+    
+    // Get feature dimension
+    size_t numFeatures() const;
+};
+
+// Base kernel interface
+class Kernel {
+    virtual double operator()(const Eigen::VectorXd& x1,
+                             const Eigen::VectorXd& x2) const = 0;
+    virtual ~Kernel() = default;
+};
+
+// Available kernel implementations
+class RBFKernel;
+class MaternKernel;
+class ConstantKernel;
+class SumKernel;
+class ProductKernel;
+```
+
 ### Available Kernels
 
 1. **RBF Kernel**:
@@ -152,82 +278,9 @@ void predictConcurrently(const GaussianProcess& gp) {
    kernel = ConstantKernel(1.0) * RBF(1.0)
    ```
 
-# PolynomialRegression
 
-A C++ implementation of polynomial regression that can load and use models trained with scikit-learn. Designed for high-performance prediction with thread safety.
 
-## Key Features
-
-- **Scikit-learn Compatibility**: Load models trained with scikit-learn's PolynomialFeatures
-- **Thread Safety**: Support for concurrent predictions and model updates
-- **High Performance**: Efficient matrix operations using Eigen
-- **Batch Processing**: Support for both single and batch predictions
-- **Error Handling**: Comprehensive error checking and reporting
-
-## Usage
-
-### Scikit-learn Integration Example
-
-This example demonstrates how to train a model using scikit-learn and use it in C++:
-
-1. **Train Model in Python** (examples/sklearn_export.py):
-```python
-import numpy as np
-from sklearn.preprocessing import PolynomialFeatures
-from sklearn.linear_model import LinearRegression
-
-# Generate sample data (2 features)
-X = np.array([[2.0, 3.0], [1.0, 4.0], [3.0, 1.0]])
-y = np.array([10.0, 16.0, 8.0])  # Some arbitrary target values
-
-# Polynomial transformation
-poly = PolynomialFeatures(degree=2, include_bias=True)
-X_poly = poly.fit_transform(X)
-
-# Train and save model
-model = LinearRegression()
-model.fit(X_poly, y)
-
-# Save model parameters
-with open("model.txt", "w") as f:
-    f.write(f"features: {X.shape[1]}\n")
-    f.write(f"intercept: {model.intercept_}\n")
-    f.write("coefficients:\n")
-    f.write(",".join(map(str, model.coef_)) + "\n")
-    f.write("powers:\n")
-    for row in poly.powers_:
-        f.write(",".join(map(str, row)) + "\n")
-```
-
-2. **Use Model in C++** (examples/model_usage.cpp):
-```cpp
-#include <iostream>
-#include <Eigen/Dense>
-#include "polyregression.h"
-
-int main() {
-    try {
-        PolynomialRegression model;
-        model.loadModel("model.txt");  // Load trained sklearn model
-
-        // Example inputs (matching those in Python)
-        Eigen::MatrixXd X(3, 2);
-        X << 2.0, 3.0,
-             1.0, 4.0,
-             3.0, 1.0;
-
-        // Make predictions
-        std::cout << "Predictions:\n" << model.predictBatch(X) << std::endl;
-
-    } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
-        return 1;
-    }
-    return 0;
-}
-```
-
-### Basic Example
+## Building and Installation
 
 ```cpp
 #include "config.h"

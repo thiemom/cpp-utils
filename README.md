@@ -17,6 +17,67 @@ A modern C++ configuration loader with type safety and validation support. This 
 
 ## Usage
 
+### Scikit-learn Integration Example
+
+This example demonstrates how to train a model using scikit-learn and use it in C++:
+
+1. **Train Model in Python** (examples/sklearn_export.py):
+```python
+import numpy as np
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LinearRegression
+
+# Generate sample data (2 features)
+X = np.array([[2.0, 3.0], [1.0, 4.0], [3.0, 1.0]])
+y = np.array([10.0, 16.0, 8.0])  # Some arbitrary target values
+
+# Polynomial transformation
+poly = PolynomialFeatures(degree=2, include_bias=True)
+X_poly = poly.fit_transform(X)
+
+# Train and save model
+model = LinearRegression()
+model.fit(X_poly, y)
+
+# Save model parameters
+with open("model.txt", "w") as f:
+    f.write(f"features: {X.shape[1]}\n")
+    f.write(f"intercept: {model.intercept_}\n")
+    f.write("coefficients:\n")
+    f.write(",".join(map(str, model.coef_)) + "\n")
+    f.write("powers:\n")
+    for row in poly.powers_:
+        f.write(",".join(map(str, row)) + "\n")
+```
+
+2. **Use Model in C++** (examples/model_usage.cpp):
+```cpp
+#include <iostream>
+#include <Eigen/Dense>
+#include "polyregression.h"
+
+int main() {
+    try {
+        PolynomialRegression model;
+        model.loadModel("model.txt");  // Load trained sklearn model
+
+        // Example inputs (matching those in Python)
+        Eigen::MatrixXd X(3, 2);
+        X << 2.0, 3.0,
+             1.0, 4.0,
+             3.0, 1.0;
+
+        // Make predictions
+        std::cout << "Predictions:\n" << model.predictBatch(X) << std::endl;
+
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+        return 1;
+    }
+    return 0;
+}
+```
+
 ### Basic Example
 
 ```cpp

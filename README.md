@@ -33,6 +33,125 @@ A modern C++ configuration loader with type safety and validation support. This 
 
 ---
 
+# GP-Predict
+
+A C++ implementation of Gaussian Process regression that supports various kernels and is compatible with scikit-learn models. Features thread-safe prediction and composite kernel support.
+
+## Key Features
+
+- **Multiple Kernels**: 
+  - RBF (Radial Basis Function)
+  - Matérn (with configurable ν)
+  - Constant
+  - Composite kernels (sum and product)
+- **Thread Safety**: Support for concurrent predictions
+- **scikit-learn Compatibility**: Load models trained with scikit-learn's GaussianProcessRegressor
+- **High Performance**: Efficient matrix operations using Eigen
+- **Type Safety**: Strong type checking and error handling
+
+## Usage
+
+### Training and Exporting from Python
+
+```python
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.gaussian_process.kernels import RBF, ConstantKernel, Matern
+
+# Generate sample data
+X = np.linspace(0, 10, 100)[:, np.newaxis]
+y = np.sin(X.ravel()) + np.random.normal(0, 0.1, X.shape[0])
+
+# Create composite kernel (Constant + Matern)
+kernel = ConstantKernel(1.0) + Matern(length_scale=1.0, nu=1.5)
+model = GaussianProcessRegressor(kernel=kernel)
+model.fit(X, y)
+
+# Export model (using provided script)
+python sklearn_export.py --model gaussian --kernel constant_matern
+```
+
+### Basic Usage in C++
+
+```cpp
+#include <iostream>
+#include "gp-predict.h"
+#include <Eigen/Dense>
+
+int main() {
+    try {
+        GaussianProcess gp;
+        
+        // Load model with composite kernel
+        if (!gp.loadModel("data/mean.txt", "data/covariance.txt")) {
+            return -1;
+        }
+
+        // Make predictions
+        Eigen::VectorXd x(1);
+        x << 2.5;
+        double prediction = gp.predict(x);
+        std::cout << "Prediction at x=2.5: " << prediction << std::endl;
+
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+        return -1;
+    }
+    return 0;
+}
+```
+
+### Thread-Safe Usage
+
+```cpp
+#include <thread>
+#include <vector>
+#include "gp-predict.h"
+
+void predictConcurrently(const GaussianProcess& gp) {
+    std::vector<std::thread> threads;
+    std::vector<double> points = {2.0, 4.0, 6.0, 8.0};
+    
+    for (double x : points) {
+        threads.emplace_back([&gp, x]() {
+            Eigen::VectorXd input(1);
+            input << x;
+            double pred = gp.predict(input);
+            std::cout << "f(" << x << ") = " << pred << std::endl;
+        });
+    }
+    
+    for (auto& thread : threads) {
+        thread.join();
+    }
+}
+```
+
+### Available Kernels
+
+1. **RBF Kernel**:
+   ```python
+   kernel = RBF(length_scale=1.0)
+   ```
+
+2. **Matérn Kernel**:
+   ```python
+   kernel = Matern(length_scale=1.0, nu=1.5)  # nu can be 0.5, 1.5, or 2.5
+   ```
+
+3. **Constant Kernel**:
+   ```python
+   kernel = ConstantKernel(constant_value=1.0)
+   ```
+
+4. **Composite Kernels**:
+   ```python
+   # Sum of kernels
+   kernel = ConstantKernel(1.0) + Matern(1.0, 1.5)
+   
+   # Product of kernels
+   kernel = ConstantKernel(1.0) * RBF(1.0)
+   ```
+
 # PolynomialRegression
 
 A C++ implementation of polynomial regression that can load and use models trained with scikit-learn. Designed for high-performance prediction with thread safety.
@@ -196,9 +315,78 @@ The library uses the `ConfigError` exception class which provides:
 - Type mismatch information
 - Validation failure details
 
-## Building
+## Building and Installation
 
-This is a header-only library. Simply include `config.h` in your project.
+This project uses CMake for building and supports selective component compilation. The following components are available:
+
+- **ConfigLoader**: Thread-safe configuration management (header-only)
+- **PolynomialRegression**: scikit-learn compatible polynomial regression
+- **GP-Predict**: Gaussian Process prediction with composite kernels
+
+### Prerequisites
+
+- CMake 3.15 or higher
+- C++17 compliant compiler
+- Eigen 3.3 or higher
+
+### Build Options
+
+```cmake
+BUILD_POLYREGRESSION  # Build polynomial regression component (ON)
+BUILD_GP_PREDICT      # Build Gaussian process component (ON)
+BUILD_CONFIG          # Build configuration utility (ON)
+BUILD_EXAMPLES        # Build example programs (ON)
+```
+
+### Basic Build (All Components)
+
+```bash
+# Unix-like systems
+mkdir build && cd build
+cmake ..
+cmake --build .
+
+# Windows with MinGW
+mkdir build && cd build
+cmake .. -G "MinGW Makefiles"
+cmake --build .
+```
+
+### Selective Component Build
+
+```bash
+# Only polynomial regression
+cmake .. -DBUILD_GP_PREDICT=OFF -DBUILD_CONFIG=OFF
+
+# Only Gaussian process
+cmake .. -DBUILD_POLYREGRESSION=OFF -DBUILD_CONFIG=OFF
+
+# Only config utility
+cmake .. -DBUILD_POLYREGRESSION=OFF -DBUILD_GP_PREDICT=OFF
+```
+
+### Installation
+
+```bash
+cmake --build . --target install
+```
+
+This will install:
+- Headers to `${CMAKE_INSTALL_INCLUDEDIR}`
+- Libraries to `${CMAKE_INSTALL_LIBDIR}`
+- CMake configuration to `${CMAKE_INSTALL_LIBDIR}/cmake`
+- Examples to `${CMAKE_INSTALL_BINDIR}` (if built)
+
+### Using in Other Projects
+
+```cmake
+find_package(cpp_ml_tools REQUIRED)
+target_link_libraries(your_target PRIVATE 
+    cpp_ml_tools::polyregression
+    cpp_ml_tools::gp-predict
+    cpp_ml_tools::config
+)
+```
 
 ## Dependencies
 

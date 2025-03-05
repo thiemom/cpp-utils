@@ -1,4 +1,4 @@
-#include "PolynomialRegression.h"
+#include "polyregression.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>

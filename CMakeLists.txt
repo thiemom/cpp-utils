@@ -24,7 +24,7 @@ option(BUILD_POLYREGRESSION "Build polynomial regression component" ON)
 option(BUILD_GP_PREDICT "Build Gaussian process prediction component" ON)
 option(BUILD_CONFIG "Build configuration utility component" ON)
 option(BUILD_EXAMPLES "Build example programs" ON)
-option(BUILD_TESTS "Build test suite" OFF)
+option(BUILD_TESTS "Build test suite" ON)
 
 # Options for Eigen
 option(DOWNLOAD_EIGEN "Download Eigen3 if not found" ON)
@@ -123,8 +123,11 @@ endif()
 
 # Add components based on options
 if(BUILD_CONFIG)
-    add_library(config INTERFACE)
-    target_include_directories(config INTERFACE
+    add_library(config
+        config.cpp
+        config.h
+    )
+    target_include_directories(config PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     )
@@ -168,9 +171,7 @@ if(BUILD_EXAMPLES)
 endif()
 
 # Tests
-if(BUILD_TESTS)
-    add_subdirectory(tests)
-endif()
+# Note: Tests are added below with CTest
 
 # Installation rules
 include(GNUInstallDirs)
@@ -206,6 +207,15 @@ if(BUILD_GP_PREDICT)
         kernels.h 
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     )
+endif()
+
+# Enable testing at the top level
+include(CTest)
+enable_testing()
+
+# Add the tests directory
+if(BUILD_TESTS)
+    add_subdirectory(tests)
 endif()
 
 # Export targets

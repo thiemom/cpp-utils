@@ -14,6 +14,12 @@ protected:
         testFile << "allowed_ips 192.168.1.1,192.168.1.2\n";
         testFile << "max_connections 100\n";
         testFile << "timeout 30.5\n";
+        // Additional configuration values
+        testFile << "# Test values\n";
+        testFile << "description test case\n";
+        testFile << "x 3.14\n";
+        testFile << "X 1.1,2.2,3.3,4.4,5.5\n";
+        testFile << "count 42\n";
         testFile.close();
     }
 
@@ -75,4 +81,29 @@ TEST_F(ConfigLoaderTest, ValidationRules) {
     
     EXPECT_THROW(config.load("invalid_config.txt"), ConfigError);
     std::remove("invalid_config.txt");
+}
+
+TEST_F(ConfigLoaderTest, AdditionalConfigValues) {
+    ConfigLoader config;
+    ASSERT_TRUE(config.load("test_config.txt"));
+    
+    // Test string value
+    EXPECT_EQ(config.get<std::string>("description"), "test case");
+    
+    // Test float value
+    EXPECT_FLOAT_EQ(config.get<float>("x"), 3.14f);
+    
+
+    
+    // Test vector of floats
+    auto X = config.get<std::vector<float>>("X");
+    ASSERT_EQ(X.size(), 5);
+    EXPECT_FLOAT_EQ(X[0], 1.1f);
+    EXPECT_FLOAT_EQ(X[1], 2.2f);
+    EXPECT_FLOAT_EQ(X[2], 3.3f);
+    EXPECT_FLOAT_EQ(X[3], 4.4f);
+    EXPECT_FLOAT_EQ(X[4], 5.5f);
+    
+    // Test integer value
+    EXPECT_EQ(config.get<int>("count"), 42);
 }

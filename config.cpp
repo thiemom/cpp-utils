@@ -183,6 +183,49 @@ ConfigLoader::Value ConfigLoader::parseValue(const std::string& value) {
             tokens.push_back(token);
         }
 
+        // Special handling for IP addresses
+        bool looksLikeIPs = false;
+        for (const auto& token : tokens) {
+            // Count dots in the token
+            int dotCount = 0;
+            for (char c : token) {
+                if (c == '.') dotCount++;
+            }
+            
+            // IP addresses typically have 3 dots (e.g., 192.168.1.1)
+            if (dotCount == 3 && token.find_first_not_of("0123456789. ") == std::string::npos) {
+                looksLikeIPs = true;
+            }
+        }
+        
+        // If it looks like IP addresses, treat as string vector
+        if (looksLikeIPs) {
+            std::vector<std::string> stringVec;
+            for (const auto& t : tokens) {
+                stringVec.push_back(t);
+            }
+            return stringVec;
+        }
+        
+        // Check if tokens contain non-numeric characters
+        bool containsNonNumeric = false;
+        for (const auto& token : tokens) {
+            if (token.find_first_not_of("0123456789.-+ ") != std::string::npos) {
+                containsNonNumeric = true;
+                break;
+            }
+        }
+        
+        // If tokens contain non-numeric chars, treat as string vector
+        if (containsNonNumeric) {
+            std::vector<std::string> stringVec;
+            for (const auto& t : tokens) {
+                stringVec.push_back(t);
+            }
+            return stringVec;
+        }
+        
+        // First try to parse as vector of integers
         try {
             if (std::all_of(tokens.begin(), tokens.end(), [](const std::string& s) {
                 return s.find_first_not_of(" 0123456789-") == std::string::npos;
@@ -191,6 +234,14 @@ ConfigLoader::Value ConfigLoader::parseValue(const std::string& value) {
                 for (const auto& t : tokens) vec.push_back(std::stoi(t));
                 return vec;
             }
+        } catch (const std::invalid_argument&) {
+            // Not integers, continue to next type
+        } catch (const std::out_of_range&) {
+            throw ConfigError("Number out of range in array: " + value);
+        }
+        
+        // Then try to parse as vector of floats
+        try {
             if (std::all_of(tokens.begin(), tokens.end(), [](const std::string& s) {
                 return s.find_first_not_of(" 0123456789.-") == std::string::npos;
             })) {
@@ -199,11 +250,17 @@ ConfigLoader::Value ConfigLoader::parseValue(const std::string& value) {
                 return vec;
             }
         } catch (const std::invalid_argument&) {
-            throw ConfigError("Invalid number format in array: " + value);
+            // Not floats, continue to next type
         } catch (const std::out_of_range&) {
             throw ConfigError("Number out of range in array: " + value);
         }
-        return tokens; // Assume string vector
+        
+        // If not numbers, return as vector of strings
+        std::vector<std::string> stringVec;
+        for (const auto& t : tokens) {
+            stringVec.push_back(t);
+        }
+        return stringVec;
     }
 
     // Handle single values

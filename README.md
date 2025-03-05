@@ -170,17 +170,64 @@ The library uses the `ConfigError` exception class which provides:
 
 This is a header-only library. Simply include `config.h` in your project.
 
-## Requirements
+## Dependencies
 
+### Required
 - C++17 or later
+- [Eigen](https://eigen.tuxfamily.org/) 3.4 or later
+  - Header-only linear algebra library
+  - Used for matrix operations and efficient computations
+
+### Optional (for examples)
+- Python 3.7 or later
+- scikit-learn
+  - For training models and exporting to C++ format
+  - Install with: `pip install scikit-learn numpy`
+
+### Build System
+- CMake 3.15 or later (recommended)
+- Any C++17 compliant compiler:
+  - GCC 7 or later
+  - Clang 5 or later
+  - MSVC 2017 or later
+
+### Thread Safety Requirements
 - Standard Library support for:
-  - `std::variant`
-  - `std::optional`
-  - Regular expressions
+  - `std::shared_mutex` (C++17)
+  - `std::shared_ptr`
 
 ## License
 
 This project is open source and available under the MIT License.
+
+```
+Copyright (c) 2025 Thiemo M.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+### Third-Party Dependencies
+
+- **Eigen**: Mozilla Public License 2.0
+  - Only required portions are used
+  - Header-only, no linking required
+  - Commercial use is permitted
 
 ## Contributing
 

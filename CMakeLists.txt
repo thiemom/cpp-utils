@@ -1,4 +1,17 @@
 cmake_minimum_required(VERSION 3.15)
+
+# Check if CMAKE_TOOLCHAIN_FILE is defined and exists before proceeding
+if(DEFINED ENV{CMAKE_TOOLCHAIN_FILE})
+    if(EXISTS "$ENV{CMAKE_TOOLCHAIN_FILE}")
+        set(CMAKE_TOOLCHAIN_FILE "$ENV{CMAKE_TOOLCHAIN_FILE}")
+        message(STATUS "Using toolchain file: ${CMAKE_TOOLCHAIN_FILE}")
+    else()
+        message(WARNING "Toolchain file specified by CMAKE_TOOLCHAIN_FILE environment variable does not exist: $ENV{CMAKE_TOOLCHAIN_FILE}")
+        message(STATUS "Continuing without toolchain file...")
+        unset(ENV{CMAKE_TOOLCHAIN_FILE})
+    endif()
+endif()
+
 project(cpp_ml_tools VERSION 1.0.0 LANGUAGES CXX)
 
 # Set C++ standard
@@ -14,7 +27,54 @@ option(BUILD_EXAMPLES "Build example programs" ON)
 option(BUILD_TESTS "Build test suite" OFF)
 
 # Find Eigen (required for all components)
-find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+set(EIGEN3_INCLUDE_DIR "" CACHE PATH "Path to Eigen3 include directory")
+
+# Try different methods to find Eigen3
+if(NOT EIGEN3_INCLUDE_DIR)
+    # First try the standard find_package
+    find_package(Eigen3 3.3 QUIET NO_MODULE)
+    
+    if(NOT Eigen3_FOUND)
+        # Try finding the Eigen3Config.cmake file
+        find_package(Eigen3 3.3 QUIET CONFIG)
+    endif()
+    
+    if(NOT Eigen3_FOUND)
+        # Try pkg-config
+        find_package(PkgConfig QUIET)
+        if(PKG_CONFIG_FOUND)
+            pkg_check_modules(EIGEN3 QUIET eigen3)
+        endif()
+    endif()
+    
+    # If still not found, try to find the include directory directly
+    if(NOT Eigen3_FOUND AND NOT EIGEN3_INCLUDE_DIR)
+        find_path(EIGEN3_INCLUDE_DIR
+            NAMES Eigen/Core
+            PATHS
+                ${CMAKE_INSTALL_PREFIX}/include
+                ${CMAKE_PREFIX_PATH}/include
+                /usr/include
+                /usr/local/include
+                /opt/local/include
+                "C:/Program Files/Eigen3/include"
+                "C:/Program Files (x86)/Eigen3/include"
+                "C:/mingw64/include"
+                "C:/msys64/mingw64/include"
+                "$ENV{PROGRAMFILES}/Eigen3/include"
+            PATH_SUFFIXES eigen3 eigen
+        )
+        
+        if(EIGEN3_INCLUDE_DIR)
+            message(STATUS "Found Eigen3 include directory: ${EIGEN3_INCLUDE_DIR}")
+            add_library(Eigen3::Eigen INTERFACE IMPORTED)
+            set_target_properties(Eigen3::Eigen PROPERTIES
+                INTERFACE_INCLUDE_DIRECTORIES "${EIGEN3_INCLUDE_DIR}")
+        else()
+            message(FATAL_ERROR "Eigen3 not found. Please install Eigen3 or set EIGEN3_INCLUDE_DIR to the directory containing Eigen/Core")
+        endif()
+    endif()
+endif()
 
 # Output directories
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)

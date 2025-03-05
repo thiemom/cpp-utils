@@ -13,6 +13,88 @@ A thread-safe polynomial regression implementation compatible with scikit-learn 
 ### 3. Gaussian Processes
 A flexible Gaussian Process implementation supporting various kernels and scikit-learn compatibility.
 
+## Building the Project
+
+### Prerequisites
+
+- CMake 3.15 or higher
+- C++17 compatible compiler
+- Eigen 3.3 or higher
+
+### Building on macOS
+
+```bash
+# Install dependencies
+brew install cmake eigen
+
+# Build the project
+mkdir -p build && cd build
+cmake ..
+make
+```
+
+### Building on Linux
+
+```bash
+# Install dependencies (Ubuntu/Debian)
+sudo apt-get install cmake libeigen3-dev
+
+# Build the project
+mkdir -p build && cd build
+cmake ..
+make
+```
+
+### Building on Windows
+
+There are multiple ways to build on Windows:
+
+#### Option 1: Using vcpkg (Recommended)
+
+```powershell
+# First, clone and bootstrap vcpkg if you haven't already
+git clone https://github.com/Microsoft/vcpkg.git
+cd vcpkg
+.\bootstrap-vcpkg.bat
+
+# Install Eigen
+.\vcpkg install eigen3:x64-windows
+
+# Build the project (from the project root directory)
+mkdir build
+cd build
+cmake .. -DCMAKE_TOOLCHAIN_FILE="[path to vcpkg]/scripts/buildsystems/vcpkg.cmake"
+cmake --build . --config Release
+```
+
+#### Option 2: Manual Eigen3 installation
+
+1. Download Eigen from the [official website](https://eigen.tuxfamily.org/)
+2. Extract it to a directory (e.g., `C:\Libraries\eigen-3.4.0`)
+3. Build the project specifying the Eigen3 include directory:
+
+```powershell
+mkdir build
+cd build
+cmake .. -DEIGEN3_INCLUDE_DIR="C:\Libraries\eigen-3.4.0"
+cmake --build . --config Release
+```
+
+#### Option 3: Using MinGW and MSYS2
+
+```bash
+# Install MSYS2 from https://www.msys2.org/
+# Open MSYS2 MinGW 64-bit shell and run:
+pacman -S mingw-w64-x86_64-cmake mingw-w64-x86_64-eigen3 mingw-w64-x86_64-gcc
+
+# Build the project
+mkdir -p build && cd build
+cmake .. -G "MinGW Makefiles"
+mingw32-make
+```
+
+Note: If you encounter issues with finding Eigen3, you can explicitly specify the include directory with `-DEIGEN3_INCLUDE_DIR="path/to/eigen"` when running CMake.
+
 ---
 
 # Components

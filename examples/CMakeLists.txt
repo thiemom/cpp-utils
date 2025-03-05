@@ -20,9 +20,12 @@ if(BUILD_GP_PREDICT)
 endif()
 
 # Installation
-install(TARGETS 
-    $<$<BOOL:${BUILD_POLYREGRESSION}>:polyregression_example>
-    $<$<BOOL:${BUILD_GP_PREDICT}>:gp_example>
-    $<$<BOOL:${BUILD_GP_PREDICT}>:composite_kernel_example>
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
+if(BUILD_POLYREGRESSION)
+    install(TARGETS polyregression_example
+            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
+
+if(BUILD_GP_PREDICT)
+    install(TARGETS gp_example composite_kernel_example
+            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()

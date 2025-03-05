@@ -1,4 +1,8 @@
-/*
+/**
+ * @file config.h
+ * @brief Thread-safe configuration management with type validation
+ * @copyright MIT License
+ *
  * Copyright (c) 2025 Thiemo M.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,6 +22,17 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
+ *
+ * @details
+ * This class provides a thread-safe configuration loader with type validation.
+ * It supports loading and managing configuration values from text files with
+ * automatic type detection and validation.
+ *
+ * Features:
+ * - Thread-safe configuration access
+ * - Automatic type detection and validation
+ * - Support for numbers, strings, and arrays
+ * - Comprehensive error reporting
  */
 
 #ifndef CONFIG_LOADER_HPP

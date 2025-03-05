@@ -20,6 +20,45 @@
  * SOFTWARE.
  */
 
+/**
+ * @file polyregression.h
+ * @brief Thread-safe polynomial regression implementation compatible with scikit-learn
+ *
+ * This class provides a C++ implementation of polynomial regression that can load
+ * and use models trained with scikit-learn's PolynomialFeatures. It is designed
+ * for high-performance prediction with thread safety.
+ *
+ * Features:
+ * - Scikit-learn Compatibility: Load models trained with PolynomialFeatures
+ * - Thread Safety: Support for concurrent predictions and model updates
+ * - High Performance: Efficient matrix operations using Eigen
+ * - Batch Processing: Support for both single and batch predictions
+ * - Error Handling: Comprehensive error checking and reporting
+ *
+ * Example usage:
+ * @code
+ * PolynomialRegression model;
+ * model.loadModel("model.txt");  // Load scikit-learn exported model
+ * 
+ * // Single prediction
+ * Eigen::VectorXd input(2);
+ * input << 1.0, 2.0;
+ * double result = model.predict(input);
+ *
+ * // Batch prediction
+ * Eigen::MatrixXd inputs(3, 2);
+ * inputs << 1.0, 2.0,
+ *           2.0, 3.0,
+ *           3.0, 4.0;
+ * Eigen::VectorXd results = model.predictBatch(inputs);
+ * @endcode
+ *
+ * @note This implementation is thread-safe for both model loading and predictions.
+ *       Multiple threads can safely make predictions while the model is being updated.
+ *
+ * @see sklearn_export.py for the corresponding Python export script
+ */
+
 #ifndef POLYNOMIAL_REGRESSION_H
 #define POLYNOMIAL_REGRESSION_H
 
@@ -52,6 +91,13 @@
  *          5.0, 6.0;
  *     Eigen::VectorXd predictions = model.predictBatch(X);
  * @endcode
+ */
+/**
+ * @brief Thread-safe polynomial regression model compatible with scikit-learn
+ *
+ * This class implements polynomial regression using coefficients and feature powers
+ * exported from a scikit-learn model. It supports both single and batch predictions
+ * while maintaining thread safety.
  */
 class PolynomialRegression {
 private:
@@ -96,6 +142,14 @@ public:
      * @throws std::runtime_error if input size doesn't match model features
      * @thread_safety Thread-safe. Multiple threads can call predict concurrently.
      */
+    /**
+     * @brief Make a prediction for a single input vector
+     *
+     * @param x Input vector of features
+     * @return Predicted value
+     * @throws std::runtime_error if model is not loaded or input size mismatch
+     * @thread_safety This operation is thread-safe and can be called concurrently
+     */
     double predict(const Eigen::VectorXd& x) const;
     /**
      * @brief Makes predictions for multiple input vectors.
@@ -103,6 +157,14 @@ public:
      * @return Vector of predictions
      * @throws std::runtime_error if input column count doesn't match model features
      * @thread_safety Thread-safe. Multiple threads can call predictBatch concurrently.
+     */
+    /**
+     * @brief Make predictions for multiple input vectors
+     *
+     * @param X Matrix where each row is an input vector
+     * @return Vector of predictions
+     * @throws std::runtime_error if model is not loaded or input size mismatch
+     * @thread_safety This operation is thread-safe and can be called concurrently
      */
     Eigen::VectorXd predictBatch(const Eigen::MatrixXd& X) const;
 

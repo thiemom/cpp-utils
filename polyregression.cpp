@@ -62,6 +62,14 @@ void PolynomialRegression::loadModel(const std::string& filename) {
     model = std::move(newModel);
 }
 
+/**
+ * Makes a prediction for a single input vector by:
+ * 1. Computing polynomial features
+ * 2. Applying the learned coefficients
+ * 3. Adding the intercept term
+ *
+ * Thread safety is ensured through shared_mutex for model access.
+ */
 double PolynomialRegression::predict(const Eigen::VectorXd& x) const {
     std::shared_lock<std::shared_mutex> lock(mutex);
     auto currentModel = model; // Get a reference to the current model
@@ -84,6 +92,14 @@ double PolynomialRegression::predict(const Eigen::VectorXd& x) const {
     return result;
 }
 
+/**
+ * Makes predictions for multiple input vectors efficiently by:
+ * 1. Validating input dimensions
+ * 2. Computing polynomial features for each input
+ * 3. Applying coefficients in a vectorized manner
+ *
+ * This method is optimized for batch processing while maintaining thread safety.
+ */
 Eigen::VectorXd PolynomialRegression::predictBatch(const Eigen::MatrixXd& X) const {
     // Get a thread-safe reference to the current model
     std::shared_lock<std::shared_mutex> lock(mutex);

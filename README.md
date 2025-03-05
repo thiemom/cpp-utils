@@ -1,8 +1,24 @@
+# C++ Utilities
+
+A collection of modern C++ utilities focused on performance and thread safety.
+
+## Available Utilities
+
+### 1. ConfigLoader
+A thread-safe configuration loader with type validation and error handling.
+
+### 2. PolynomialRegression
+A thread-safe polynomial regression implementation compatible with scikit-learn models.
+
+---
+
 # ConfigLoader
 
 A modern C++ configuration loader with type safety and validation support. This library provides a flexible and easy-to-use interface for loading and managing configuration values from text files.
 
 ## Features
+
+### Key Features
 
 - **Type-Safe Access**: Strongly typed configuration values with compile-time type checking
 - **Automatic Type Detection**: Automatically detects and converts values to appropriate types
@@ -14,6 +30,20 @@ A modern C++ configuration loader with type safety and validation support. This 
   - Arrays (comma-separated values)
 - **Error Handling**: Comprehensive error reporting with line numbers
 - **Comments Support**: Ignores comment lines starting with '#'
+
+---
+
+# PolynomialRegression
+
+A C++ implementation of polynomial regression that can load and use models trained with scikit-learn. Designed for high-performance prediction with thread safety.
+
+## Key Features
+
+- **Scikit-learn Compatibility**: Load models trained with scikit-learn's PolynomialFeatures
+- **Thread Safety**: Support for concurrent predictions and model updates
+- **High Performance**: Efficient matrix operations using Eigen
+- **Batch Processing**: Support for both single and batch predictions
+- **Error Handling**: Comprehensive error checking and reporting
 
 ## Usage
 

@@ -16,6 +16,9 @@ namespace gp {
 
 // Forward declarations
 class Kernel;
+class RBFKernel;
+class MaternKernel;
+class ConstantKernel;
 using KernelPtr = std::shared_ptr<Kernel>;
 
 // Operator declarations
@@ -24,9 +27,9 @@ KernelPtr operator*(KernelPtr k1, KernelPtr k2);
 
 /**
  * @brief Base class for all kernels
- */
-/**
- * @brief Base class for all kernels
+ * 
+ * Provides the interface for kernel functions used in Gaussian Process regression.
+ * Supports both basic kernels (RBF, Matern, Constant) and composite kernels.
  */
 class Kernel {
 public:
@@ -41,8 +44,6 @@ public:
     virtual ~Kernel() = default;
     virtual Type getType() const = 0;
     virtual std::string toString() const = 0;
-public:
-    virtual ~Kernel() = default;
     
     /**
      * @brief Compute kernel between two points
@@ -68,40 +69,12 @@ public:
     /**
      * @brief Create kernel from parameters
      */
+    // Forward declaration of the create method - implementation after class definitions
     static KernelPtr create(const std::string& type,
                            const Eigen::VectorXd& params,
                            const std::string& op = "",
                            KernelPtr k1 = nullptr,
-                           KernelPtr k2 = nullptr) {
-        if (type == "rbf") {
-            if (params.size() != 1) {
-                throw std::runtime_error("RBF kernel requires 1 parameter (length_scale)");
-            }
-            return std::make_shared<RBFKernel>(params(0));
-        } else if (type == "matern") {
-            if (params.size() != 2) {
-                throw std::runtime_error("Matern kernel requires 2 parameters (length_scale, nu)");
-            }
-            return std::make_shared<MaternKernel>(params(0), params(1));
-        } else if (type == "constant") {
-            if (params.size() != 1) {
-                throw std::runtime_error("Constant kernel requires 1 parameter (constant)");
-            }
-            return std::make_shared<ConstantKernel>(params(0));
-        }
-        } else if (type == "composite") {
-            if (!k1 || !k2) {
-                throw std::runtime_error("Composite kernel requires two sub-kernels");
-            }
-            if (op == "sum") {
-                return k1 + k2;
-            } else if (op == "product") {
-                return k1 * k2;
-            }
-            throw std::runtime_error("Unsupported composite operation: " + op);
-        }
-        throw std::runtime_error("Unsupported kernel type: " + type);
-    }
+                           KernelPtr k2 = nullptr);
 };
 
 /**
@@ -111,8 +84,14 @@ class ConstantKernel : public Kernel {
 public:
     explicit ConstantKernel(double constant) : constant_(constant) {}
     
-    double compute(const Eigen::VectorXd& x1, 
-                  const Eigen::VectorXd& x2) const override {
+    Type getType() const override { return Type::CONSTANT; }
+    
+    std::string toString() const override { 
+        return "ConstantKernel(constant=" + std::to_string(constant_) + ")"; 
+    }
+    
+    double compute(const Eigen::VectorXd& /* x1 */, 
+                  const Eigen::VectorXd& /* x2 */) const override {
         return constant_;
     }
 private:
@@ -125,6 +104,12 @@ private:
 class RBFKernel : public Kernel {
 public:
     explicit RBFKernel(double length_scale) : length_scale_(length_scale) {}
+    
+    Type getType() const override { return Type::RBF; }
+    
+    std::string toString() const override { 
+        return "RBFKernel(length_scale=" + std::to_string(length_scale_) + ")"; 
+    }
     
     double compute(const Eigen::VectorXd& x1, 
                   const Eigen::VectorXd& x2) const override {
@@ -142,6 +127,13 @@ class MaternKernel : public Kernel {
 public:
     MaternKernel(double length_scale, double nu) 
         : length_scale_(length_scale), nu_(nu) {}
+    
+    Type getType() const override { return Type::MATERN; }
+    
+    std::string toString() const override { 
+        return "MaternKernel(length_scale=" + std::to_string(length_scale_) + 
+               ", nu=" + std::to_string(nu_) + ")"; 
+    }
     
     double compute(const Eigen::VectorXd& x1, 
                   const Eigen::VectorXd& x2) const override {
@@ -163,6 +155,8 @@ private:
     double length_scale_;
     double nu_;
 };
+
+
 
 } // namespace gp
 

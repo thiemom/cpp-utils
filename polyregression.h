@@ -172,9 +172,9 @@ public:
     PolynomialRegression(const PolynomialRegression&) = delete;
     PolynomialRegression& operator=(const PolynomialRegression&) = delete;
 
-    // Move operations
-    PolynomialRegression(PolynomialRegression&&) noexcept = default;
-    PolynomialRegression& operator=(PolynomialRegression&&) noexcept = default;
+    // Move operations are also deleted because std::shared_mutex is not movable
+    PolynomialRegression(PolynomialRegression&&) noexcept = delete;
+    PolynomialRegression& operator=(PolynomialRegression&&) noexcept = delete;
 };
 
 #endif

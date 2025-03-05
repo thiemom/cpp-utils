@@ -26,7 +26,8 @@ option(BUILD_CONFIG "Build configuration utility component" ON)
 option(BUILD_EXAMPLES "Build example programs" ON)
 option(BUILD_TESTS "Build test suite" OFF)
 
-# Find Eigen (required for all components)
+# Options for Eigen
+option(DOWNLOAD_EIGEN "Download Eigen3 if not found" ON)
 set(EIGEN3_INCLUDE_DIR "" CACHE PATH "Path to Eigen3 include directory")
 
 # Try different methods to find Eigen3
@@ -64,15 +65,44 @@ if(NOT EIGEN3_INCLUDE_DIR)
                 "$ENV{PROGRAMFILES}/Eigen3/include"
             PATH_SUFFIXES eigen3 eigen
         )
-        
-        if(EIGEN3_INCLUDE_DIR)
-            message(STATUS "Found Eigen3 include directory: ${EIGEN3_INCLUDE_DIR}")
-            add_library(Eigen3::Eigen INTERFACE IMPORTED)
-            set_target_properties(Eigen3::Eigen PROPERTIES
-                INTERFACE_INCLUDE_DIRECTORIES "${EIGEN3_INCLUDE_DIR}")
-        else()
-            message(FATAL_ERROR "Eigen3 not found. Please install Eigen3 or set EIGEN3_INCLUDE_DIR to the directory containing Eigen/Core")
-        endif()
+    endif()
+    
+    # If still not found and DOWNLOAD_EIGEN is ON, download and configure Eigen
+    if(NOT Eigen3_FOUND AND NOT EIGEN3_INCLUDE_DIR AND DOWNLOAD_EIGEN)
+        message(STATUS "Eigen3 not found. Downloading and configuring Eigen3...")
+        include(ExternalProject)
+        set(EIGEN3_DOWNLOAD_DIR ${CMAKE_BINARY_DIR}/eigen3)
+        ExternalProject_Add(
+            eigen3_external
+            URL https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.gz
+            URL_HASH SHA256=b4c198460eba6f28d34894e3a5710998818515104d6e74e5cc331ce31e46e626
+            PREFIX ${EIGEN3_DOWNLOAD_DIR}
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND ""
+            INSTALL_COMMAND ""
+            TEST_COMMAND ""
+        )
+        set(EIGEN3_INCLUDE_DIR ${EIGEN3_DOWNLOAD_DIR}/src/eigen3_external)
+        file(MAKE_DIRECTORY ${EIGEN3_INCLUDE_DIR})
+        add_library(Eigen3::Eigen INTERFACE IMPORTED GLOBAL)
+        add_dependencies(Eigen3::Eigen eigen3_external)
+        set_target_properties(Eigen3::Eigen PROPERTIES
+            INTERFACE_INCLUDE_DIRECTORIES ${EIGEN3_INCLUDE_DIR})
+        set(Eigen3_FOUND TRUE)
+    endif()
+    
+    # If Eigen3 is found through direct include path, create interface target
+    if(NOT Eigen3_FOUND AND EIGEN3_INCLUDE_DIR)
+        message(STATUS "Found Eigen3 include directory: ${EIGEN3_INCLUDE_DIR}")
+        add_library(Eigen3::Eigen INTERFACE IMPORTED)
+        set_target_properties(Eigen3::Eigen PROPERTIES
+            INTERFACE_INCLUDE_DIRECTORIES "${EIGEN3_INCLUDE_DIR}")
+        set(Eigen3_FOUND TRUE)
+    endif()
+    
+    # If still not found, report error
+    if(NOT Eigen3_FOUND AND NOT EIGEN3_INCLUDE_DIR)
+        message(FATAL_ERROR "Eigen3 not found. Please install Eigen3, set EIGEN3_INCLUDE_DIR to the directory containing Eigen/Core, or enable DOWNLOAD_EIGEN option.")
     endif()
 endif()
 

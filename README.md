@@ -19,7 +19,7 @@ A flexible Gaussian Process implementation supporting various kernels and scikit
 
 - CMake 3.15 or higher
 - C++17 compatible compiler
-- Eigen 3.3 or higher
+- Eigen 3.3 or higher (can be automatically downloaded during build)
 
 ### Building on macOS
 
@@ -85,7 +85,7 @@ cmake --build . --config Release
 ```bash
 # Install MSYS2 from https://www.msys2.org/
 # Open MSYS2 MinGW 64-bit shell and run:
-pacman -S mingw-w64-x86_64-cmake mingw-w64-x86_64-eigen3 mingw-w64-x86_64-gcc
+pacman -S mingw-w64-x86_64-cmake mingw-w64-x86_64-gcc
 
 # Build the project
 mkdir -p build && cd build
@@ -93,7 +93,17 @@ cmake .. -G "MinGW Makefiles"
 mingw32-make
 ```
 
-Note: If you encounter issues with finding Eigen3, you can explicitly specify the include directory with `-DEIGEN3_INCLUDE_DIR="path/to/eigen"` when running CMake.
+#### Option 4: Automatic Eigen Download (Recommended for beginners)
+
+```powershell
+# Just build with the DOWNLOAD_EIGEN option enabled (default)
+mkdir build
+cd build
+cmake .. -DDOWNLOAD_EIGEN=ON
+cmake --build . --config Release
+```
+
+Note: If you encounter issues with finding Eigen3, you can explicitly specify the include directory with `-DEIGEN3_INCLUDE_DIR="path/to/eigen"` when running CMake, or enable the automatic download with `-DDOWNLOAD_EIGEN=ON`.
 
 ---
 
